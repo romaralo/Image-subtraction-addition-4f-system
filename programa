@@ -1,0 +1,105 @@
+M=1000; % Number of pixels
+L=10; % Length of the field of view (in meters)
+lambda=500e-6; % Wavelength of light (in meters)
+z=200 %Propagation distance (in meters)
+k=2*pi/(lambda); % Wavenumber
+
+%% Objeto: dos rectángulos separados.
+A = imresize(fondo,[M M]);
+u1=double(A)
+
+%% Coordenadas 
+
+[M,N]=size(u1); %get input field array size 
+dx=L/M; %sample interval 
+
+x=-L/2:dx:L/2-dx; %spatial coords 
+fx=-1/(2*dx):1/L:1/(2*dx)-1/L; % Spatial frequency vector (in 1/meters)
+[X,Y]=meshgrid(x,x); 
+[FX,FY]=meshgrid(fx,fx); % Coordinate grids (Fourier space)
+
+%% Calculamos propagación del objeto a la lente.
+
+H=exp(-1j*pi*lambda*z*(FX.^2+FY.^2)); %transfer func 
+%kz=sqrt(k^2-(2*pi*FX).^2-(2*pi*FY).^2)
+%H=exp(1i*z*kz)
+H=fftshift(H); %shift trans func 
+U1=fft2(fftshift(u1)); %shift, fft src field 
+U2=H.*U1; %multiply 
+u_fin=ifftshift(ifft2(U2)); %inv fft, center obs field 
+
+figure(1)
+imagesc(x,x,abs(u_fin))
+colorbar
+colormap('gray')
+
+%% Lente
+
+f=200
+tA=exp(-1j*k*(X.^2+Y.^2)/(2*f));   % METER ALGÚN FACTOR PARA QUE FUNCIONE *1.48
+Initial_new_field=u_fin.*tA;
+z1=200
+
+
+%% Propagamos otra ves. De lente al plano de obs.
+
+H1=exp(-1j*pi*lambda*z1*(FX.^2+FY.^2)); %transfer func 
+H1=fftshift(H1); %shift trans func 
+U1=fft2(fftshift(Initial_new_field)); %shift, fft src field 
+U21=H1.*U1; %multiply 
+u_fin1=ifftshift(ifft2(U21)); %inv fft, center obs field field 
+
+%% Dibujamos
+
+figure(2)
+imagesc(x,x,abs(u_fin1))
+colorbar
+colormap('gray')
+
+%% Propagamos del plano de observación a la segundo lente. Aquí metemos nuestro filtro
+
+A=imread("lin_vert2.jpg"); %read image file 
+A= rgb2gray(A);
+A = imresize(A,[M M]);
+u1=double(A)
+
+ufilt=u_fin1.*u1
+figure(3)
+imagesc(x,x,abs(ufilt))
+colorbar
+colormap('gray')
+%% Propagamos del plano de Fourier a la segunda lente:
+
+z2=200
+H2=exp(-1j*pi*lambda*z2*(FX.^2+FY.^2)); %transfer func 
+H2=fftshift(H2); %shift trans func 
+U2=fft2(fftshift(ufilt)); %shift, fft src field 
+U2=H2.*U2; %multiply 
+u_fin2=ifftshift(ifft2(U2)); %inv fft, center obs field field 
+
+figure(4)
+imagesc(x,x,abs(u_fin2))
+colorbar
+colormap('gray')
+%% Finalmente de la segunda lente al plano de observación.
+
+% Segunda lente:
+f1=200
+tA1=exp(-1j*k*(X.^2+Y.^2)/(2*f1));
+z3=200
+
+new_field=u_fin2.*tA1;
+
+H2=exp(-1j*pi*lambda*z2*(FX.^2+FY.^2)); %transfer func 
+H2=fftshift(H2); %shift trans func 
+U2=fft2(fftshift(new_field)); %shift, fft src field 
+U2=H2.*U2; %multiply 
+u_fin3=ifftshift(ifft2(U2)); %inv fft, center obs field field 
+
+figure(6)
+%imagen_volteada = fliplr(imagen);
+u_fin3=flipud(fliplr(u_fin3))  % Le damos la vuelta a la imagen. Hay que hacerlo así 2 veces.
+imagesc(x,x,(abs(u_fin3)))
+%colorbar
+colormap('gray')
+
