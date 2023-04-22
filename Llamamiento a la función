@@ -1,0 +1,3 @@
+fondo=rect2(500, 800, 100, 350, 200, 20, 50);
+figure(1)
+imshow(fondo)
