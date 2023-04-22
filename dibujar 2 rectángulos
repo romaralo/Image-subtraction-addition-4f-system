@@ -1,0 +1,15 @@
+function [fondo] = rect2(alto, ancho, distancia, x1, y1, ancho1, alto1)
+    % Crear la imagen en negro
+    fondo = zeros(alto, ancho);
+
+    % Definir las coordenadas de los rectángulos
+    x2 = x1 + ancho1 + distancia;
+    y2 = y1;
+    ancho2 = ancho1;
+    alto2 = alto1/2;
+
+    % Dibujar los rectángulos en la imagen
+    fondo(y1:y1+alto1-1, x1:x1+ancho1-1) = 255;
+    fondo(y2:y2+alto2-1, x2:x2+ancho2-1) = 255;
+end
+
